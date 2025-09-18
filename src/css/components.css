@@ -195,13 +195,14 @@ body.nav-open .menu-icon span:nth-child(3) {
 }
 
 .search-panel {
-  --search-collapsed: 3rem;
+  --search-collapsed: 2.9rem;
   --search-expanded: 16rem;
   position: relative;
   display: flex;
   flex-direction: row-reverse;
   align-items: center;
   gap: 0;              /* was 0.65rem */
+  padding: 0;
   width: var(--search-collapsed);
   height: 3rem;
   padding: 0 0.35rem;
