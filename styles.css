@@ -811,7 +811,9 @@ body.scroll-animations .reveal-on-scroll.is-visible {
 
   .header-main > .header-actions {
     grid-column: 2;
+    grid-row: 1;
     justify-self: center;
+    align-self: start;
   }
 
   .header-main > .primary-nav {
@@ -822,6 +824,7 @@ body.scroll-animations .reveal-on-scroll.is-visible {
   .header-actions {
     gap: 0.75rem;
     justify-content: center;
+    align-items: flex-start;
   }
 
   .icon-btn,

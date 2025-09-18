@@ -84,45 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
     navOverlay.setAttribute('hidden', '');
   }
 
-  const logoMark = document.querySelector('.logo-mark');
-  let shimmerCooldown = false;
-  let shimmerScheduled = false;
-
-  if (logoMark) {
-    const triggerLogoShimmer = () => {
-      if (shimmerCooldown || prefersReducedMotion) {
-        return;
-      }
-      shimmerCooldown = true;
-      logoMark.classList.add('is-shimmering');
-      logoMark.addEventListener(
-        'animationend',
-        () => {
-          logoMark.classList.remove('is-shimmering');
-        },
-        { once: true }
-      );
-      window.setTimeout(() => {
-        shimmerCooldown = false;
-      }, 1700);
-    };
-
-    const handleScrollShimmer = () => {
-      if (prefersReducedMotion || shimmerScheduled) {
-        return;
-      }
-      shimmerScheduled = true;
-      requestAnimationFrame(() => {
-        if (window.scrollY > 6) {
-          triggerLogoShimmer();
-        }
-        shimmerScheduled = false;
-      });
-    };
-
-    window.addEventListener('scroll', handleScrollShimmer, { passive: true });
-  }
-
   const observerOptions = {
     threshold: 0.2,
     rootMargin: '0px 0px -10% 0px'
@@ -262,9 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
   reduceMotionQuery.addEventListener('change', (event) => {
     prefersReducedMotion = event.matches;
     if (prefersReducedMotion) {
-      shimmerCooldown = false;
-      shimmerScheduled = false;
-      logoMark?.classList.remove('is-shimmering');
       applyMobileSlider(false);
     } else {
       applyMobileSlider(mobileSliderQuery.matches);
