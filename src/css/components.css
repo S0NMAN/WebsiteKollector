@@ -199,21 +199,25 @@ body.nav-open .menu-icon span:nth-child(3) {
   --search-expanded: 16rem;
   position: relative;
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: row;        /* behave like a normal button in the row */
   align-items: center;
-  gap: 0;              /* was 0.65rem */
-  padding: 0;
+  justify-content: center;    /* center icon when collapsed */
   width: var(--search-collapsed);
-  height: 3rem;
-  padding: 0 0.35rem;
+  height: var(--search-collapsed);
+  flex-shrink: 0;
+  /* no internal spacing when collapsed */
+  gap: 0;
+  padding: 0;
+  margin: 0;
   border-radius: var(--radius-pill);
   border: 1px solid rgba(255, 255, 255, 0.55);
   background: var(--surface-strong);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  flex-shrink: 0;
-  transition: width 0.45s cubic-bezier(0.33, 1, 0.68, 1), box-shadow 0.45s cubic-bezier(0.33, 1, 0.68, 1),
-    padding 0.3s ease;
+  transition:
+    width 0.45s cubic-bezier(0.33, 1, 0.68, 1),
+    box-shadow 0.45s cubic-bezier(0.33, 1, 0.68, 1);
 }
+
 
 .search-panel:hover,
 .search-panel:focus-within {
