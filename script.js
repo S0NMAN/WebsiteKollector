@@ -1,48 +1,127 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const bodyEl = document.body;
   const yearField = document.getElementById('year');
   if (yearField) {
     yearField.textContent = new Date().getFullYear();
   }
 
-  document.body.classList.add('scroll-animations');
+  bodyEl.classList.add('scroll-animations');
 
-  const iconButtons = document.querySelectorAll('.icon-btn');
-  iconButtons.forEach((button) => {
-    const wrapper = button.querySelector('.icon-wrapper');
-    if (!wrapper) return;
+  const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let prefersReducedMotion = reduceMotionQuery.matches;
 
-    let rafId = null;
+  const menuToggle = document.querySelector('.menu-toggle');
+  const primaryNav = document.querySelector('.primary-nav');
+  const navOverlay = document.querySelector('.nav-overlay');
+  let navFocusTimeout = null;
 
-    const animateTo = (x, y) => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const pullStrength = 0.32;
-        wrapper.style.transform = `translate(${x * pullStrength}px, ${y * pullStrength}px)`;
+  const closeNav = (returnFocus = false) => {
+    bodyEl.classList.remove('nav-open');
+    if (menuToggle) {
+      menuToggle.setAttribute('aria-expanded', 'false');
+      menuToggle.setAttribute('aria-label', 'Open navigation menu');
+      if (returnFocus) {
+        menuToggle.focus();
+      }
+    }
+    if (navOverlay) {
+      navOverlay.setAttribute('hidden', '');
+    }
+    if (navFocusTimeout) {
+      clearTimeout(navFocusTimeout);
+      navFocusTimeout = null;
+    }
+  };
+
+  if (menuToggle && primaryNav) {
+    menuToggle.addEventListener('click', () => {
+      if (bodyEl.classList.contains('nav-open')) {
+        closeNav();
+        return;
+      }
+
+      bodyEl.classList.add('nav-open');
+      menuToggle.setAttribute('aria-expanded', 'true');
+      menuToggle.setAttribute('aria-label', 'Close navigation menu');
+      if (navOverlay) {
+        navOverlay.removeAttribute('hidden');
+      }
+
+      const firstNavLink = primaryNav.querySelector('a');
+      if (firstNavLink) {
+        navFocusTimeout = window.setTimeout(() => {
+          firstNavLink.focus({ preventScroll: true });
+          navFocusTimeout = null;
+        }, 220);
+      }
+    });
+
+    if (navOverlay) {
+      navOverlay.addEventListener('click', () => closeNav(true));
+    }
+
+    primaryNav.addEventListener('click', (event) => {
+      const link = event.target instanceof Element ? event.target.closest('a') : null;
+      if (link) {
+        closeNav();
+      }
+    });
+
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && bodyEl.classList.contains('nav-open')) {
+        event.preventDefault();
+        closeNav(true);
+      }
+    });
+
+    const navResetQuery = window.matchMedia('(min-width: 781px)');
+    navResetQuery.addEventListener('change', (event) => {
+      if (event.matches) {
+        closeNav();
+      }
+    });
+  } else if (navOverlay) {
+    navOverlay.setAttribute('hidden', '');
+  }
+
+  const logoMark = document.querySelector('.logo-mark');
+  let shimmerCooldown = false;
+  let shimmerScheduled = false;
+
+  if (logoMark) {
+    const triggerLogoShimmer = () => {
+      if (shimmerCooldown || prefersReducedMotion) {
+        return;
+      }
+      shimmerCooldown = true;
+      logoMark.classList.add('is-shimmering');
+      logoMark.addEventListener(
+        'animationend',
+        () => {
+          logoMark.classList.remove('is-shimmering');
+        },
+        { once: true }
+      );
+      window.setTimeout(() => {
+        shimmerCooldown = false;
+      }, 1700);
+    };
+
+    const handleScrollShimmer = () => {
+      if (prefersReducedMotion || shimmerScheduled) {
+        return;
+      }
+      shimmerScheduled = true;
+      requestAnimationFrame(() => {
+        if (window.scrollY > 6) {
+          triggerLogoShimmer();
+        }
+        shimmerScheduled = false;
       });
     };
 
-    const handleMove = (event) => {
-      const rect = button.getBoundingClientRect();
-      const offsetX = event.clientX - rect.left - rect.width / 2;
-      const offsetY = event.clientY - rect.top - rect.height / 2;
-      animateTo(offsetX, offsetY);
-    };
-
-    const reset = () => {
-      cancelAnimationFrame(rafId);
-      wrapper.style.transform = 'translate(0, 0)';
-    };
-
-    button.addEventListener('mousemove', handleMove);
-    button.addEventListener('mouseenter', (event) => {
-      if (event.clientX && event.clientY) {
-        handleMove(event);
-      }
-    });
-    button.addEventListener('mouseleave', reset);
-    button.addEventListener('blur', reset);
-    button.addEventListener('touchstart', reset, { passive: true });
-  });
+    window.addEventListener('scroll', handleScrollShimmer, { passive: true });
+  }
 
   const observerOptions = {
     threshold: 0.2,
@@ -72,6 +151,129 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   revealElements();
+
+  const productGrids = Array.from(document.querySelectorAll('.product-grid'));
+  const mobileSliderQuery = window.matchMedia('(max-width: 720px)');
+  const sliderStates = new Map();
+
+  const stopGridSlider = (grid) => {
+    const state = sliderStates.get(grid);
+    if (!state) return;
+
+    window.clearTimeout(state.timeoutId);
+    if (state.intervalId) {
+      window.clearInterval(state.intervalId);
+    }
+
+    state.images.forEach((img) => {
+      img.removeEventListener('load', state.handleImageLoad);
+    });
+
+    state.cards.forEach((card) => {
+      card.classList.remove('is-active');
+      card.removeAttribute('aria-hidden');
+    });
+
+    grid.style.removeProperty('--mobile-card-height');
+    sliderStates.delete(grid);
+  };
+
+  const startGridSlider = (grid) => {
+    if (sliderStates.has(grid)) return;
+
+    const cards = Array.from(grid.querySelectorAll('.product-card'));
+    if (cards.length <= 1) return;
+
+    const state = {
+      cards,
+      index: 0,
+      timeoutId: null,
+      intervalId: null,
+      images: Array.from(grid.querySelectorAll('img')),
+      handleImageLoad: () => {},
+      updateHeight: () => {}
+    };
+
+    state.updateHeight = () => {
+      window.requestAnimationFrame(() => {
+        const activeCard = state.cards[state.index];
+        if (!activeCard) return;
+        grid.style.setProperty('--mobile-card-height', `${activeCard.offsetHeight}px`);
+      });
+    };
+
+    state.handleImageLoad = () => state.updateHeight();
+
+    cards.forEach((card, idx) => {
+      const isActive = idx === 0;
+      card.classList.toggle('is-active', isActive);
+      card.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+    });
+
+    state.images.forEach((img) => {
+      if (!img.complete) {
+        img.addEventListener('load', state.handleImageLoad);
+      }
+    });
+
+    state.updateHeight();
+
+    const advance = () => {
+      const currentCard = state.cards[state.index];
+      if (currentCard) {
+        currentCard.classList.remove('is-active');
+        currentCard.setAttribute('aria-hidden', 'true');
+      }
+
+      state.index = (state.index + 1) % state.cards.length;
+      const nextCard = state.cards[state.index];
+      nextCard.classList.add('is-active');
+      nextCard.setAttribute('aria-hidden', 'false');
+      state.updateHeight();
+    };
+
+    state.timeoutId = window.setTimeout(() => {
+      advance();
+      state.intervalId = window.setInterval(advance, 5200);
+    }, 4200);
+
+    sliderStates.set(grid, state);
+  };
+
+  const applyMobileSlider = (shouldEnable) => {
+    productGrids.forEach((grid) => {
+      if (shouldEnable) {
+        startGridSlider(grid);
+      } else {
+        stopGridSlider(grid);
+      }
+    });
+  };
+
+  if (!prefersReducedMotion) {
+    applyMobileSlider(mobileSliderQuery.matches);
+  }
+
+  mobileSliderQuery.addEventListener('change', (event) => {
+    if (prefersReducedMotion) return;
+    applyMobileSlider(event.matches);
+  });
+
+  reduceMotionQuery.addEventListener('change', (event) => {
+    prefersReducedMotion = event.matches;
+    if (prefersReducedMotion) {
+      shimmerCooldown = false;
+      shimmerScheduled = false;
+      logoMark?.classList.remove('is-shimmering');
+      applyMobileSlider(false);
+    } else {
+      applyMobileSlider(mobileSliderQuery.matches);
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    sliderStates.forEach((state) => state.updateHeight());
+  });
 
   const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 

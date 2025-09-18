@@ -18,15 +18,30 @@
 </head>
 <body id="top">
   <header class="site-header">
-    <a class="logo" href="#top" aria-label="Hobby Kollector home">
-      <span class="logo-mark" aria-hidden="true">HK</span>
-      <span class="logo-type">Hobby Kollector</span>
-    </a>
-    <nav class="primary-nav" aria-label="Primary">
-      <ul class="nav-list">
-        <li>
-          <a class="nav-link" href="#ceramics">
-            <span class="nav-icon" aria-hidden="true">
+    <div class="header-main">
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="primary-navigation"
+        aria-label="Open navigation menu"
+      >
+        <span class="sr-only">Menu</span>
+        <span class="menu-icon" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </button>
+      <a class="logo" href="#top" aria-label="Hobby Kollector home">
+        <span class="logo-mark" aria-hidden="true">HK</span>
+        <span class="logo-type">Hobby Kollector</span>
+      </a>
+      <nav class="primary-nav" id="primary-navigation" aria-label="Primary">
+        <ul class="nav-list">
+          <li>
+            <a class="nav-link" href="#ceramics">
+              <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"
                 ><path
                   d="M6 4h20l-2 12a8 8 0 01-7 6.9V28h4"
@@ -47,10 +62,10 @@
             </span>
             <span class="nav-text">Ceramics</span>
           </a>
-        </li>
-        <li>
-          <a class="nav-link" href="#stickers">
-            <span class="nav-icon" aria-hidden="true">
+          </li>
+          <li>
+            <a class="nav-link" href="#stickers">
+              <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"
                 ><path
                   d="M10 5h12a3 3 0 013 3v12a7 7 0 01-7 7H9a2 2 0 01-2-2V10a5 5 0 015-5z"
@@ -71,10 +86,10 @@
             </span>
             <span class="nav-text">Stickers</span>
           </a>
-        </li>
-        <li>
-          <a class="nav-link" href="#woodwork">
-            <span class="nav-icon" aria-hidden="true">
+          </li>
+          <li>
+            <a class="nav-link" href="#woodwork">
+              <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"
                 ><path
                   d="M6 17l5 11h10l5-11"
@@ -95,10 +110,10 @@
             </span>
             <span class="nav-text">Woodwork</span>
           </a>
-        </li>
-        <li>
-          <a class="nav-link" href="#painting">
-            <span class="nav-icon" aria-hidden="true">
+          </li>
+          <li>
+            <a class="nav-link" href="#painting">
+              <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"
                 ><path
                   d="M4 27c2.2-5.8 7.6-9.6 13.6-9.1l6.4-6.4a3 3 0 10-4.2-4.2l-6.4 6.4C13 19.7 9 24.5 4 27z"
@@ -112,20 +127,20 @@
             </span>
             <span class="nav-text">Painting</span>
           </a>
-        </li>
-        <li>
-          <a class="nav-link" href="#digital">
-            <span class="nav-icon" aria-hidden="true">
+          </li>
+          <li>
+            <a class="nav-link" href="#digital">
+              <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"
                 ><rect x="5" y="6" width="22" height="16" rx="3" ry="3" fill="none" stroke="currentColor" stroke-width="2" /><path d="M12 26h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg
               >
             </span>
             <span class="nav-text">Digital Projects</span>
           </a>
-        </li>
-        <li>
-          <a class="nav-link" href="#gallery">
-            <span class="nav-icon" aria-hidden="true">
+          </li>
+          <li>
+            <a class="nav-link" href="#gallery">
+              <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"
                 ><rect x="4" y="7" width="24" height="18" rx="3" ry="3" fill="none" stroke="currentColor" stroke-width="2" /><path
                   d="M10 17l4-4 4 4 4-3 4 4"
@@ -139,13 +154,13 @@
             </span>
             <span class="nav-text">Gallery</span>
           </a>
-        </li>
-      </ul>
-    </nav>
-    <div class="header-actions">
-      <button class="icon-btn search" type="button" aria-label="Search the site">
-        <span class="icon-wrapper">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+          </li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn search" type="button" aria-label="Search the site">
+          <span class="icon-wrapper">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
             ><circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="2" /><line
               x1="16"
               y1="16"
@@ -218,7 +233,9 @@
           >
         </span>
       </a>
+      </div>
     </div>
+    <div class="nav-overlay" hidden aria-hidden="true"></div>
   </header>
 
   <main>
