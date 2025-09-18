@@ -1,0 +1,69 @@
+.logo-mark.is-shimmering {
+  animation: logoMarkGlowOnce 1.6s ease forwards;
+}
+
+.logo-mark.is-shimmering::before {
+  animation: logoMarkSweep 1.6s ease forwards;
+}
+
+@keyframes logoMarkGlowOnce {
+  0% {
+    box-shadow: 0 12px 24px rgba(108, 75, 255, 0.32), 0 0 10px rgba(108, 75, 255, 0.38), 0 0 16px rgba(60, 200, 171, 0.26);
+  }
+  45% {
+    box-shadow: 0 20px 36px rgba(108, 75, 255, 0.5), 0 0 22px rgba(108, 75, 255, 0.7), 0 0 30px rgba(60, 200, 171, 0.36);
+  }
+  100% {
+    box-shadow: 0 12px 24px rgba(108, 75, 255, 0.32), 0 0 10px rgba(108, 75, 255, 0.4), 0 0 16px rgba(60, 200, 171, 0.26);
+  }
+}
+
+@keyframes logoMarkSweep {
+  0% {
+    transform: translateX(-120%) rotate(24deg);
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.65;
+  }
+  60% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateX(115%) rotate(24deg);
+    opacity: 0;
+  }
+}
+
+body.scroll-animations .reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(24px) scale(0.96);
+}
+
+body.scroll-animations .reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.7s cubic-bezier(0.33, 1, 0.68, 1), transform 0.7s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.hover-carousel.carousel-active .media-stack img {
+  transition-duration: 0.45s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-mark,
+  .logo-mark.is-shimmering {
+    animation: none !important;
+  }
+
+  .logo-mark::before,
+  .logo-mark.is-shimmering::before {
+    animation: none !important;
+    opacity: 0;
+  }
+
+  body.scroll-animations .reveal-on-scroll,
+  .media-stack img {
+    transform: none !important;
+  }
+}

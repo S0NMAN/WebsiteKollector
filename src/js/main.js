@@ -1,20 +1,9 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const bodyEl = document.body;
-  const yearField = document.getElementById('year');
-  if (yearField) {
-    yearField.textContent = new Date().getFullYear();
-  }
+import { initializeScrollAnimations } from './scroll.js';
 
-  bodyEl.classList.add('scroll-animations');
-
-  const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let prefersReducedMotion = reduceMotionQuery.matches;
-
+const initNavigation = (bodyEl) => {
   const menuToggle = document.querySelector('.menu-toggle');
   const primaryNav = document.querySelector('.primary-nav');
   const navOverlay = document.querySelector('.nav-overlay');
-  const scrollTopButton = document.querySelector('.scroll-top');
-  const scrollTopDesktopQuery = window.matchMedia('(min-width: 900px)');
   let navFocusTimeout = null;
 
   const closeNav = (returnFocus = false) => {
@@ -85,36 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
   } else if (navOverlay) {
     navOverlay.setAttribute('hidden', '');
   }
+};
 
-  const observerOptions = {
-    threshold: 0.2,
-    rootMargin: '0px 0px -10% 0px'
-  };
-
-  const revealElements = () => {
-    const images = document.querySelectorAll('img');
-    images.forEach((img) => {
-      img.classList.add('reveal-on-scroll');
-    });
-
-    if ('IntersectionObserver' in window) {
-      const revealObserver = new IntersectionObserver((entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            obs.unobserve(entry.target);
-          }
-        });
-      }, observerOptions);
-
-      images.forEach((img) => revealObserver.observe(img));
-    } else {
-      images.forEach((img) => img.classList.add('is-visible'));
-    }
-  };
-
-  revealElements();
-
+const initProductGrids = (prefersReducedMotion, reduceMotionQuery) => {
   const productGrids = Array.from(document.querySelectorAll('.product-grid'));
   const mobileSliderQuery = window.matchMedia('(max-width: 720px)');
   const sliderStates = new Map();
@@ -213,26 +175,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  if (!prefersReducedMotion) {
+  if (!prefersReducedMotion.value) {
     applyMobileSlider(mobileSliderQuery.matches);
   }
 
   mobileSliderQuery.addEventListener('change', (event) => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion.value) return;
     applyMobileSlider(event.matches);
   });
 
   reduceMotionQuery.addEventListener('change', (event) => {
-    prefersReducedMotion = event.matches;
-    if (prefersReducedMotion) {
+    prefersReducedMotion.value = event.matches;
+    if (prefersReducedMotion.value) {
       applyMobileSlider(false);
     } else {
       applyMobileSlider(mobileSliderQuery.matches);
     }
   });
 
+  window.addEventListener('resize', () => {
+    sliderStates.forEach((state) => state.updateHeight());
+  });
+};
+
+const initScrollTop = (prefersReducedMotion, scrollTopButton) => {
+  if (!scrollTopButton) {
+    return;
+  }
+
+  const scrollTopDesktopQuery = window.matchMedia('(min-width: 900px)');
+
   const setScrollTopVisibility = (isVisible) => {
-    if (!scrollTopButton) return;
     scrollTopButton.classList.toggle('is-visible', isVisible);
     if (isVisible) {
       scrollTopButton.removeAttribute('aria-hidden');
@@ -244,36 +217,32 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const updateScrollTopVisibility = () => {
-    if (!scrollTopButton) return;
     const shouldShow = scrollTopDesktopQuery.matches && window.scrollY > 160;
     setScrollTopVisibility(shouldShow);
   };
 
-  if (scrollTopButton) {
-    scrollTopButton.addEventListener('click', () => {
-      if (prefersReducedMotion) {
-        window.scrollTo({ top: 0 });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    });
-
-    window.addEventListener('scroll', updateScrollTopVisibility, { passive: true });
-    scrollTopDesktopQuery.addEventListener('change', updateScrollTopVisibility);
-    updateScrollTopVisibility();
-  }
-
-  window.addEventListener('resize', () => {
-    sliderStates.forEach((state) => state.updateHeight());
-    updateScrollTopVisibility();
+  scrollTopButton.addEventListener('click', () => {
+    if (prefersReducedMotion.value) {
+      window.scrollTo({ top: 0 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   });
 
-  const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  window.addEventListener('scroll', updateScrollTopVisibility, { passive: true });
+  scrollTopDesktopQuery.addEventListener('change', updateScrollTopVisibility);
+  window.addEventListener('resize', updateScrollTopVisibility);
+  updateScrollTopVisibility();
+};
 
+const initHoverCarousels = () => {
+  const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   const carouselContainers = document.querySelectorAll('.hover-carousel');
+
   carouselContainers.forEach((container) => {
     const stack = container.querySelector('.media-stack');
     if (!stack) return;
+
     const slides = Array.from(stack.querySelectorAll('img'));
     if (slides.length <= 1) return;
 
@@ -290,8 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const startCarousel = () => {
       if (intervalId) return;
       container.classList.add('carousel-active');
-      startTimer = setTimeout(() => {
-        intervalId = setInterval(() => {
+      startTimer = window.setTimeout(() => {
+        intervalId = window.setInterval(() => {
           index = (index + 1) % slides.length;
           showSlide(index);
         }, 1200);
@@ -300,10 +269,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const stopCarousel = () => {
       container.classList.remove('carousel-active');
-      clearTimeout(startTimer);
-      startTimer = null;
+      if (startTimer) {
+        window.clearTimeout(startTimer);
+        startTimer = null;
+      }
       if (intervalId) {
-        clearInterval(intervalId);
+        window.clearInterval(intervalId);
         intervalId = null;
       }
       index = 0;
@@ -326,4 +297,26 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
-});
+};
+
+const initSite = () => {
+  const bodyEl = document.body;
+  const yearField = document.getElementById('year');
+  if (yearField) {
+    yearField.textContent = new Date().getFullYear();
+  }
+
+  bodyEl.classList.add('scroll-animations');
+
+  const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const prefersReducedMotion = { value: reduceMotionQuery.matches };
+
+  initNavigation(bodyEl);
+  initializeScrollAnimations();
+  initProductGrids(prefersReducedMotion, reduceMotionQuery);
+  const scrollTopButton = document.querySelector('.scroll-top');
+  initScrollTop(prefersReducedMotion, scrollTopButton);
+  initHoverCarousels();
+};
+
+document.addEventListener('DOMContentLoaded', initSite);
