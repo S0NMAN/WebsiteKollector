@@ -775,6 +775,57 @@ body.scroll-animations .reveal-on-scroll.is-visible {
   transition-duration: 0.45s;
 }
 
+.scroll-top {
+  position: fixed;
+  bottom: clamp(2rem, 4vw, 3rem);
+  right: clamp(2rem, 4vw, 3rem);
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-pill);
+  background: rgba(24, 26, 43, 0.6);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: 0 26px 48px rgba(24, 26, 43, 0.25);
+  transition: opacity 0.3s ease, transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px);
+  z-index: 90;
+}
+
+.scroll-top svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.scroll-top.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.scroll-top:hover,
+.scroll-top:focus-visible {
+  background: rgba(108, 75, 255, 0.82);
+  box-shadow: 0 30px 56px rgba(68, 70, 84, 0.3);
+}
+
+.scroll-top:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 4px;
+}
+
+@media (max-width: 899px) {
+  .scroll-top {
+    display: none;
+  }
+}
+
 /* Responsive adjustments */
 
 @media (max-width: 960px) {
