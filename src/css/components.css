@@ -252,6 +252,7 @@ body.nav-open .menu-icon span:nth-child(3) {
 
 .search-panel .icon-wrapper {
   display: grid;
+  place-items: center;
 }
 
 .search-panel .icon-arrow {
