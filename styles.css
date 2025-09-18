@@ -331,7 +331,12 @@ a:hover,
 
 .hero-card .media-stack {
   aspect-ratio: 3 / 4;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.55));
+  background: transparent;
+}
+
+.hero-card .media-stack img {
+  object-fit: contain;
+  background-color: transparent;
 }
 
 .hero-note {
