@@ -1,0 +1,101 @@
+:root {
+  --page-gradient: linear-gradient(135deg, #f1ecff 0%, #d9f5f2 45%, #ffe7f3 100%);
+  --text-color: #1f2133;
+  --muted-text: #5f6478;
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-strong: rgba(255, 255, 255, 0.92);
+  --surface-line: rgba(255, 255, 255, 0.4);
+  --accent: #6c4bff;
+  --accent-warm: #ff8a65;
+  --accent-cool: #3cc8ab;
+  --accent-soft: rgba(108, 75, 255, 0.14);
+  --nav-chip-bg: linear-gradient(135deg, rgba(108, 75, 255, 0.16), rgba(60, 200, 171, 0.1));
+  --nav-chip-border: rgba(108, 75, 255, 0.28);
+  --nav-chip-hover-border: rgba(108, 75, 255, 0.45);
+  --nav-chip-text: #1c1f33;
+  --nav-chip-hover-bg: linear-gradient(135deg, rgba(108, 75, 255, 0.32), rgba(60, 200, 171, 0.22));
+  --nav-chip-hover-text: #101225;
+  --shadow-soft: 0 22px 45px rgba(41, 45, 62, 0.16);
+  --shadow-strong: 0 30px 60px rgba(68, 70, 84, 0.22);
+  --radius-lg: 26px;
+  --radius-md: 18px;
+  --radius-pill: 999px;
+  --content-max: 1200px;
+  --logo-ease: cubic-bezier(0.35, 0.9, 0.4, 1);
+  --header-offset: 0px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Urbanist", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--page-gradient);
+  color: var(--text-color);
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 10% 10%, rgba(108, 75, 255, 0.18), transparent 60%),
+    radial-gradient(circle at 90% 20%, rgba(60, 200, 171, 0.2), transparent 65%),
+    radial-gradient(circle at 15% 80%, rgba(255, 138, 101, 0.18), transparent 55%);
+  pointer-events: none;
+  z-index: -2;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  backdrop-filter: saturate(120%) blur(32px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+main {
+  padding: calc(3rem + var(--header-offset)) min(6vw, 80px) 7rem;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Playfair Display", "Times New Roman", serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #16182b;
+}
+
+p {
+  margin-top: 0.4rem;
+  margin-bottom: 1rem;
+  color: var(--muted-text);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
