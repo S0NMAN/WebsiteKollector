@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuToggle = document.querySelector('.menu-toggle');
   const primaryNav = document.querySelector('.primary-nav');
   const navOverlay = document.querySelector('.nav-overlay');
+  const scrollTopButton = document.querySelector('.scroll-top');
+  const scrollTopDesktopQuery = window.matchMedia('(min-width: 900px)');
   let navFocusTimeout = null;
 
   const closeNav = (returnFocus = false) => {
@@ -229,8 +231,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  const setScrollTopVisibility = (isVisible) => {
+    if (!scrollTopButton) return;
+    scrollTopButton.classList.toggle('is-visible', isVisible);
+    if (isVisible) {
+      scrollTopButton.removeAttribute('aria-hidden');
+      scrollTopButton.removeAttribute('tabindex');
+    } else {
+      scrollTopButton.setAttribute('aria-hidden', 'true');
+      scrollTopButton.setAttribute('tabindex', '-1');
+    }
+  };
+
+  const updateScrollTopVisibility = () => {
+    if (!scrollTopButton) return;
+    const shouldShow = scrollTopDesktopQuery.matches && window.scrollY > 160;
+    setScrollTopVisibility(shouldShow);
+  };
+
+  if (scrollTopButton) {
+    scrollTopButton.addEventListener('click', () => {
+      if (prefersReducedMotion) {
+        window.scrollTo({ top: 0 });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    window.addEventListener('scroll', updateScrollTopVisibility, { passive: true });
+    scrollTopDesktopQuery.addEventListener('change', updateScrollTopVisibility);
+    updateScrollTopVisibility();
+  }
+
   window.addEventListener('resize', () => {
     sliderStates.forEach((state) => state.updateHeight());
+    updateScrollTopVisibility();
   });
 
   const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
