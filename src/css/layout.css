@@ -58,6 +58,14 @@
 .header-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 0.9rem;
+  position: relative;
+}
+
+.header-actions .quick-actions {
+  display: flex;
+  align-items: center;
   gap: 0.9rem;
 }
 
