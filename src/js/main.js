@@ -235,6 +235,101 @@ const initScrollTop = (prefersReducedMotion, scrollTopButton) => {
   updateScrollTopVisibility();
 };
 
+const initExpandableMediaStacks = () => {
+  const stacks = Array.from(document.querySelectorAll('.media-stack.expandable-grid'));
+  if (!stacks.length) {
+    return;
+  }
+
+  stacks.forEach((stack) => {
+    const hoverGrid = stack.querySelector('.hover-grid');
+    if (!hoverGrid) {
+      return;
+    }
+
+    const tiles = Array.from(hoverGrid.querySelectorAll('[data-grid-tile]'));
+    let expandTimer = null;
+
+    const clearExpandTimer = () => {
+      if (expandTimer) {
+        window.clearTimeout(expandTimer);
+        expandTimer = null;
+      }
+    };
+
+    const showGrid = () => {
+      if (!stack.classList.contains('is-grid-visible')) {
+        stack.classList.add('is-grid-visible');
+      }
+    };
+
+    const hideGrid = () => {
+      stack.classList.remove('is-grid-visible');
+      hoverGrid.removeAttribute('data-active-tile');
+    };
+
+    const scheduleGrid = () => {
+      clearExpandTimer();
+      expandTimer = window.setTimeout(() => {
+        showGrid();
+        expandTimer = null;
+      }, 2000);
+    };
+
+    stack.addEventListener('pointerenter', () => {
+      scheduleGrid();
+    });
+
+    stack.addEventListener('pointerleave', () => {
+      clearExpandTimer();
+      hideGrid();
+    });
+
+    stack.addEventListener('focusin', () => {
+      scheduleGrid();
+    });
+
+    stack.addEventListener('focusout', (event) => {
+      if (!stack.contains(event.relatedTarget)) {
+        clearExpandTimer();
+        hideGrid();
+      }
+    });
+
+    hoverGrid.addEventListener('pointerleave', () => {
+      hoverGrid.removeAttribute('data-active-tile');
+    });
+
+    tiles.forEach((tile) => {
+      const tileId = tile.getAttribute('data-grid-tile');
+      if (!tileId) {
+        return;
+      }
+
+      tile.addEventListener('pointerenter', () => {
+        hoverGrid.setAttribute('data-active-tile', tileId);
+      });
+
+      tile.addEventListener('pointerleave', (event) => {
+        const nextTarget = event.relatedTarget;
+        if (!(nextTarget instanceof HTMLElement)) {
+          hoverGrid.removeAttribute('data-active-tile');
+          return;
+        }
+
+        if (!hoverGrid.contains(nextTarget)) {
+          hoverGrid.removeAttribute('data-active-tile');
+          return;
+        }
+
+        if (!nextTarget.closest('[data-grid-tile]')) {
+          hoverGrid.removeAttribute('data-active-tile');
+        }
+      });
+    });
+  });
+};
+
 const initHoverCarousels = () => {
   const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   const carouselContainers = document.querySelectorAll('.hover-carousel');
@@ -540,6 +635,7 @@ const initSite = () => {
   const scrollTopButton = document.querySelector('.scroll-top');
   initScrollTop(prefersReducedMotion, scrollTopButton);
   initHoverCarousels();
+  initExpandableMediaStacks();
   initHeaderSearch();
 };
 
