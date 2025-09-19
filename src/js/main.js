@@ -235,6 +235,180 @@ const initScrollTop = (prefersReducedMotion, scrollTopButton) => {
   updateScrollTopVisibility();
 };
 
+const initExpandableMediaStacks = () => {
+  const stacks = Array.from(document.querySelectorAll('.media-stack.expandable-grid'));
+  if (!stacks.length) {
+    return;
+  }
+
+  stacks.forEach((stack) => {
+    // Guard against gallery images accidentally inheriting the expandable behaviour.
+    if (stack.closest('.gallery')) {
+      return;
+    }
+
+    const hoverGrid = stack.querySelector('.hover-grid');
+    if (!hoverGrid) {
+      return;
+    }
+
+    const tiles = Array.from(hoverGrid.querySelectorAll('[data-grid-tile]'));
+    if (!tiles.length) {
+      return;
+    }
+
+    let expandTimer = null;
+    let lastPointerPosition = null;
+
+    const clearExpandTimer = () => {
+      if (expandTimer) {
+        window.clearTimeout(expandTimer);
+        expandTimer = null;
+      }
+    };
+
+    const setActiveTile = (tileId) => {
+      if (!tileId) {
+        hoverGrid.removeAttribute('data-active-tile');
+        return;
+      }
+
+      hoverGrid.setAttribute('data-active-tile', tileId);
+    };
+
+    // Highlight the tile that lives under the recorded pointer coordinates once the grid opens.
+    const updateActiveTileFromPoint = (position) => {
+      if (!position) {
+        return false;
+      }
+
+      const { x, y } = position;
+      if (typeof x !== 'number' || typeof y !== 'number') {
+        return false;
+      }
+
+      const elementAtPoint = document.elementFromPoint(x, y);
+      if (!elementAtPoint) {
+        return false;
+      }
+
+      const tileTarget = elementAtPoint.closest('[data-grid-tile]');
+      if (!tileTarget || !hoverGrid.contains(tileTarget)) {
+        return false;
+      }
+
+      const tileId = tileTarget.getAttribute('data-grid-tile');
+      if (!tileId) {
+        return false;
+      }
+
+      setActiveTile(tileId);
+      return true;
+    };
+
+    const showGrid = () => {
+      if (!stack.classList.contains('is-grid-visible')) {
+        stack.classList.add('is-grid-visible');
+      }
+
+      window.requestAnimationFrame(() => {
+        if (!updateActiveTileFromPoint(lastPointerPosition)) {
+          const firstTileId = tiles[0].getAttribute('data-grid-tile');
+          if (firstTileId) {
+            setActiveTile(firstTileId);
+          }
+        }
+      });
+    };
+
+    const hideGrid = () => {
+      stack.classList.remove('is-grid-visible');
+      hoverGrid.removeAttribute('data-active-tile');
+      lastPointerPosition = null;
+    };
+
+    const scheduleGrid = () => {
+      clearExpandTimer();
+      expandTimer = window.setTimeout(() => {
+        showGrid();
+        expandTimer = null;
+      }, 2000);
+    };
+
+    const recordPointerPosition = (event) => {
+      lastPointerPosition = {
+        x: event.clientX,
+        y: event.clientY
+      };
+    };
+
+    stack.addEventListener('pointerenter', (event) => {
+      if (event.pointerType === 'touch') {
+        return;
+      }
+
+      recordPointerPosition(event);
+      scheduleGrid();
+    });
+
+    stack.addEventListener('pointermove', (event) => {
+      if (event.pointerType === 'touch' || stack.classList.contains('is-grid-visible')) {
+        return;
+      }
+
+      recordPointerPosition(event);
+    });
+
+    stack.addEventListener('pointerleave', () => {
+      clearExpandTimer();
+      hideGrid();
+    });
+
+    stack.addEventListener('focusin', () => {
+      scheduleGrid();
+    });
+
+    stack.addEventListener('focusout', (event) => {
+      if (!stack.contains(event.relatedTarget)) {
+        clearExpandTimer();
+        hideGrid();
+      }
+    });
+
+    hoverGrid.addEventListener('pointerleave', () => {
+      hoverGrid.removeAttribute('data-active-tile');
+    });
+
+    tiles.forEach((tile) => {
+      const tileId = tile.getAttribute('data-grid-tile');
+      if (!tileId) {
+        return;
+      }
+
+      tile.addEventListener('pointerenter', () => {
+        setActiveTile(tileId);
+      });
+
+      tile.addEventListener('pointerleave', (event) => {
+        const nextTarget = event.relatedTarget;
+        if (!(nextTarget instanceof HTMLElement)) {
+          hoverGrid.removeAttribute('data-active-tile');
+          return;
+        }
+
+        if (!hoverGrid.contains(nextTarget)) {
+          hoverGrid.removeAttribute('data-active-tile');
+          return;
+        }
+
+        if (!nextTarget.closest('[data-grid-tile]')) {
+          hoverGrid.removeAttribute('data-active-tile');
+        }
+      });
+    });
+  });
+};
+
 const initHoverCarousels = () => {
   const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   const carouselContainers = document.querySelectorAll('.hover-carousel');
@@ -243,7 +417,7 @@ const initHoverCarousels = () => {
     const stack = container.querySelector('.media-stack');
     if (!stack) return;
 
-    const slides = Array.from(stack.querySelectorAll('img'));
+    const slides = Array.from(stack.querySelectorAll('img[data-slide]'));
     if (slides.length <= 1) return;
 
     let index = 0;
@@ -540,6 +714,7 @@ const initSite = () => {
   const scrollTopButton = document.querySelector('.scroll-top');
   initScrollTop(prefersReducedMotion, scrollTopButton);
   initHoverCarousels();
+  initExpandableMediaStacks();
   initHeaderSearch();
 };
 
