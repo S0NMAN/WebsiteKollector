@@ -243,7 +243,7 @@ const initHoverCarousels = () => {
     const stack = container.querySelector('.media-stack');
     if (!stack) return;
 
-    const slides = Array.from(stack.querySelectorAll('img'));
+    const slides = Array.from(stack.querySelectorAll('img[data-slide]'));
     if (slides.length <= 1) return;
 
     let index = 0;
