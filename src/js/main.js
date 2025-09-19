@@ -210,7 +210,7 @@ const initScrollTop = (prefersReducedMotion, scrollTopButton) => {
     if (isVisible) {
       scrollTopButton.removeAttribute('aria-hidden');
       scrollTopButton.removeAttribute('tabindex');
-    } else {
+     } else {
       scrollTopButton.setAttribute('aria-hidden', 'true');
       scrollTopButton.setAttribute('tabindex', '-1');
     }
@@ -242,13 +242,23 @@ const initExpandableMediaStacks = () => {
   }
 
   stacks.forEach((stack) => {
+    // Guard against gallery images accidentally inheriting the expandable behaviour.
+    if (stack.closest('.gallery')) {
+      return;
+    }
+
     const hoverGrid = stack.querySelector('.hover-grid');
     if (!hoverGrid) {
       return;
     }
 
     const tiles = Array.from(hoverGrid.querySelectorAll('[data-grid-tile]'));
+    if (!tiles.length) {
+      return;
+    }
+
     let expandTimer = null;
+    let lastPointerPosition = null;
 
     const clearExpandTimer = () => {
       if (expandTimer) {
@@ -257,15 +267,64 @@ const initExpandableMediaStacks = () => {
       }
     };
 
+    const setActiveTile = (tileId) => {
+      if (!tileId) {
+        hoverGrid.removeAttribute('data-active-tile');
+        return;
+      }
+
+      hoverGrid.setAttribute('data-active-tile', tileId);
+    };
+
+    // Highlight the tile that lives under the recorded pointer coordinates once the grid opens.
+    const updateActiveTileFromPoint = (position) => {
+      if (!position) {
+        return false;
+      }
+
+      const { x, y } = position;
+      if (typeof x !== 'number' || typeof y !== 'number') {
+        return false;
+      }
+
+      const elementAtPoint = document.elementFromPoint(x, y);
+      if (!elementAtPoint) {
+        return false;
+      }
+
+      const tileTarget = elementAtPoint.closest('[data-grid-tile]');
+      if (!tileTarget || !hoverGrid.contains(tileTarget)) {
+        return false;
+      }
+
+      const tileId = tileTarget.getAttribute('data-grid-tile');
+      if (!tileId) {
+        return false;
+      }
+
+      setActiveTile(tileId);
+      return true;
+    };
+
     const showGrid = () => {
       if (!stack.classList.contains('is-grid-visible')) {
         stack.classList.add('is-grid-visible');
       }
+
+      window.requestAnimationFrame(() => {
+        if (!updateActiveTileFromPoint(lastPointerPosition)) {
+          const firstTileId = tiles[0].getAttribute('data-grid-tile');
+          if (firstTileId) {
+            setActiveTile(firstTileId);
+          }
+        }
+      });
     };
 
     const hideGrid = () => {
       stack.classList.remove('is-grid-visible');
       hoverGrid.removeAttribute('data-active-tile');
+      lastPointerPosition = null;
     };
 
     const scheduleGrid = () => {
@@ -276,8 +335,28 @@ const initExpandableMediaStacks = () => {
       }, 2000);
     };
 
-    stack.addEventListener('pointerenter', () => {
+    const recordPointerPosition = (event) => {
+      lastPointerPosition = {
+        x: event.clientX,
+        y: event.clientY
+      };
+    };
+
+    stack.addEventListener('pointerenter', (event) => {
+      if (event.pointerType === 'touch') {
+        return;
+      }
+
+      recordPointerPosition(event);
       scheduleGrid();
+    });
+
+    stack.addEventListener('pointermove', (event) => {
+      if (event.pointerType === 'touch' || stack.classList.contains('is-grid-visible')) {
+        return;
+      }
+
+      recordPointerPosition(event);
     });
 
     stack.addEventListener('pointerleave', () => {
@@ -307,7 +386,7 @@ const initExpandableMediaStacks = () => {
       }
 
       tile.addEventListener('pointerenter', () => {
-        hoverGrid.setAttribute('data-active-tile', tileId);
+        setActiveTile(tileId);
       });
 
       tile.addEventListener('pointerleave', (event) => {
@@ -364,252 +443,7 @@ const initHoverCarousels = () => {
 
     const stopCarousel = () => {
       container.classList.remove('carousel-active');
-      if (startTimer) {
-        window.clearTimeout(startTimer);
-        startTimer = null;
-      }
-      if (intervalId) {
-        window.clearInterval(intervalId);
-        intervalId = null;
-      }
-      index = 0;
-      showSlide(index);
-    };
-
-    if (supportsHover) {
-      container.addEventListener('mouseenter', startCarousel);
-      container.addEventListener('mouseleave', stopCarousel);
-      container.addEventListener('focusin', startCarousel);
-      container.addEventListener('focusout', stopCarousel);
-    } else {
-      container.addEventListener('click', () => {
-        index = (index + 1) % slides.length;
-        showSlide(index);
-      });
-      container.addEventListener('mouseleave', () => {
-        index = 0;
-        showSlide(index);
-      });
-    }
-  });
-};
-
-const initModalSystem = (bodyEl) => {
-  const overlay = document.querySelector('[data-modal-overlay]');
-  const modalTriggers = Array.from(document.querySelectorAll('[data-modal-target]'));
-  const closeButtons = Array.from(document.querySelectorAll('[data-modal-close]'));
-  const modalCache = new Map();
-  let activeModal = null;
-  let activeTrigger = null;
-  let overlayHideTimer = null;
-
-  const getModalById = (modalId) => {
-    if (!modalId) return null;
-    if (!modalCache.has(modalId)) {
-      const modal = document.getElementById(modalId);
-      if (modal) {
-        modal.setAttribute('aria-hidden', modal.hasAttribute('hidden') ? 'true' : 'false');
-        modalCache.set(modalId, modal);
-      }
-    }
-
-    return modalCache.get(modalId) ?? null;
-  };
-
-  const showOverlay = () => {
-    if (!overlay) return;
-    if (overlayHideTimer) {
-      window.clearTimeout(overlayHideTimer);
-      overlayHideTimer = null;
-    }
-    overlay.removeAttribute('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
-    window.requestAnimationFrame(() => {
-      overlay.classList.add('is-visible');
-    });
-  };
-
-  const hideOverlay = () => {
-    if (!overlay) return;
-    overlay.classList.remove('is-visible');
-    overlay.setAttribute('aria-hidden', 'true');
-    overlayHideTimer = window.setTimeout(() => {
-      overlay.setAttribute('hidden', '');
-      overlayHideTimer = null;
-    }, 280);
-  };
-
-  const focusModal = (modal) => {
-    const autofocusTarget = modal.querySelector('[data-modal-autofocus]');
-    if (autofocusTarget instanceof HTMLElement) {
-      autofocusTarget.focus({ preventScroll: true });
-      return;
-    }
-
-    const focusableSelectors = [
-      'button:not([disabled])',
-      '[href]',
-      'input:not([disabled])',
-      'textarea:not([disabled])',
-      'select:not([disabled])',
-      '[tabindex]:not([tabindex="-1"])'
-    ].join(', ');
-
-    const firstFocusable = modal.querySelector(focusableSelectors);
-    if (firstFocusable instanceof HTMLElement) {
-      firstFocusable.focus({ preventScroll: true });
-    } else {
-      modal.focus({ preventScroll: true });
-    }
-  };
-
-  const closeModal = (returnFocus = true) => {
-    if (!activeModal) return;
-
-    const modalToClose = activeModal;
-    modalToClose.classList.remove('is-visible');
-    modalToClose.setAttribute('aria-hidden', 'true');
-    window.setTimeout(() => {
-      if (!modalToClose.classList.contains('is-visible')) {
-        modalToClose.setAttribute('hidden', '');
-      }
-    }, 280);
-
-    bodyEl.classList.remove('modal-open');
-    hideOverlay();
-
-    if (returnFocus && activeTrigger instanceof HTMLElement) {
-      activeTrigger.focus({ preventScroll: true });
-    }
-
-    activeModal = null;
-    activeTrigger = null;
-  };
-
-  const openModal = (modal, trigger) => {
-    if (!modal || activeModal === modal) {
-      return;
-    }
-
-    if (activeModal && activeModal !== modal) {
-      closeModal(false);
-    }
-
-    modal.removeAttribute('hidden');
-    modal.classList.add('is-visible');
-    modal.setAttribute('aria-hidden', 'false');
-    activeModal = modal;
-    activeTrigger = trigger instanceof HTMLElement ? trigger : null;
-
-    bodyEl.classList.add('modal-open');
-    showOverlay();
-
-    window.requestAnimationFrame(() => {
-      focusModal(modal);
-    });
-  };
-
-  modalTriggers.forEach((trigger) => {
-    const targetId = trigger.getAttribute('data-modal-target');
-    const modal = getModalById(targetId);
-    if (!modal) return;
-
-    trigger.addEventListener('click', () => {
-      openModal(modal, trigger);
-    });
-  });
-
-  closeButtons.forEach((button) => {
-    button.addEventListener('click', () => closeModal());
-  });
-
-  if (overlay) {
-    overlay.addEventListener('click', () => closeModal());
-  }
-
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && activeModal) {
-      event.preventDefault();
-      closeModal();
-    }
-  });
-
-  const contactForm = document.getElementById('contact-form');
-  if (contactForm) {
-    contactForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      contactForm.reset();
-      closeModal();
-    });
-  }
-};
-
-const initHeaderSearch = () => {
-  const searchForm = document.querySelector('.search-panel');
-  if (!searchForm) {
-    return;
-  }
-
-  const searchInput = searchForm.querySelector('.search-field');
-  const searchButton = searchForm.querySelector('.search-trigger');
-  if (!(searchInput instanceof HTMLInputElement) || !(searchButton instanceof HTMLButtonElement)) {
-    return;
-  }
-
-  const openSearch = () => {
-    if (searchForm.classList.contains('is-active')) return;
-
-    searchForm.classList.add('is-active');
-    searchButton.setAttribute('aria-expanded', 'true');
-    searchButton.setAttribute('aria-label', 'Submit search query');
-
-    window.requestAnimationFrame(() => {
-      searchInput.focus({ preventScroll: true });
-    });
-  };
-
-  const closeSearch = (returnFocus = false) => {
-    if (!searchForm.classList.contains('is-active')) return;
-
-    searchForm.classList.remove('is-active');
-    searchButton.setAttribute('aria-expanded', 'false');
-    searchButton.setAttribute('aria-label', 'Open site search');
-    searchInput.value = '';
-
-    if (returnFocus) {
-      searchButton.focus({ preventScroll: true });
-    }
-  };
-
-  searchButton.addEventListener('click', (event) => {
-    if (!searchForm.classList.contains('is-active')) {
-      event.preventDefault();
-      openSearch();
-      return;
-    }
-
-    if (!searchInput.value.trim()) {
-      event.preventDefault();
-      closeSearch(false);
-    }
-  });
-
-  searchForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    closeSearch();
-  });
-
-  document.addEventListener('click', (event) => {
-    if (!searchForm.classList.contains('is-active')) return;
-    const target = event.target;
-    if (target instanceof Node && searchForm.contains(target)) {
-      return;
-    }
-    closeSearch();
-  });
-
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && searchForm.classList.contains('is-active')) {
+@@ -518,29 +692,30 @@ const initHeaderSearch = () => {
       event.preventDefault();
       closeSearch(true);
     }
